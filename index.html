@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<!-- saved from url=(0019)http://yjdev.world/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="./SW사관학교 정글 _ 부트스트랩 연습하기_files/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <!-- jQuery and Bootstrap Bundle (includes Popper) -->
+    <script src="./SW사관학교 정글 _ 부트스트랩 연습하기_files/jquery-3.5.1.slim.min.js.다운로드" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="./SW사관학교 정글 _ 부트스트랩 연습하기_files/bootstrap.bundle.min.js.다운로드" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+    <script src="./SW사관학교 정글 _ 부트스트랩 연습하기_files/jquery.min.js.다운로드" crossorigin="anonymous"></script>
+    <!-- 구글폰트 -->
+    <link href="./SW사관학교 정글 _ 부트스트랩 연습하기_files/css" rel="stylesheet">
+    <title>SW사관학교 정글 | 부트스트랩 연습하기</title>
+    <style>
+        * {
+            font-family: 'Stylish', sans-serif;
+        }
+
+        .wrap {
+            width: 900px;
+            margin: 10px auto;
+        }
+
+        #post-box {
+            width: 60%;
+            margin: 20px auto 20px 0px;
+            padding: 0;
+        }
+
+        .badge {
+            color: white;
+        }
+
+        #edit-memo-btns button {
+            font-size: 0.8em;
+            padding: 0.1em 0.5em;
+            border: none;
+        }
+
+        #edit-memo-btns button:nth-child(1) {
+            background-color: skyblue;
+        }
+
+        #edit-memo-btns button:nth-child(2) {
+            background-color: hotpink;
+        }
+
+        .form-group input,
+        textarea {
+            width: 70%;
+        }
+        .edit-form-group input,
+        textarea {
+            width: 95%
+        }
+
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $("#card-list").html(""); 
+            showMemos();
+        });
+
+        function showMemos() {
+            $.ajax({
+                type: "GET",
+                url: "/memos",
+                data: {},
+                success: function (response) {
+                    memos = response.memos;
+                    for (i = 0; i < memos.length; i++) {
+                        makeCards(memos[i]['title'], memos[i]['text'])
+                    }
+                }
+            })
+        }
+        function makeCards(title, text) {
+            let card_html = `<div class="card" style="margin-bottom: 15px;">
+                <div class="card-body">
+                    <div id="current-form">
+                        <h5 class="card-title" id="card-title">${title}</h5>
+                        <p class="card-text" id="card-text">${text}</p>
+                        <div id="edit-memo-btns">
+                            <button type="button" class="btn btn-secondary" onclick="openEditForm(this)">수정</button>
+                            <button type="button" class="btn btn-secondary" onclick="deleteMemo(this)">삭제</button>
+                        </div>
+                    </div>
+                    <div id="edit-memo-form" style="padding: 0; display:none;">
+                        <div class="form-group edit-form-group">
+                            <input type="text" class="mod-title" id="edit-input-title" name="title_sent" value="${title}">
+                        </div>
+                        <div class="form-group edit-form-group">
+                            <textarea class="mod-text" id="edit-input-text" name="text_sent" rows="2">${text}</textarea>
+                        </div> 
+                        <button onclick="editMemo(this)" type="submit" class="btn btn-primary btn-sm">저장</button>
+                    </div>
+                </div>
+            </div>`
+            $("#card-list").append(card_html);
+        }
+        function createMemo() {
+            create_title = $('#input-title').val()
+            create_text = $('#input-text').val()
+            console.log(create_title)
+            if (!(create_title && create_text)) {
+                return alert('제목과 내용을 둘 다 입력해주세요 :(')
+                // 테스트 시 얼럿창 뜨면 오류 생김 - 해결 필요
+            }
+            $.ajax({
+                type: "POST",
+                url: "/memo/create",
+                data: {
+                    'create_title_sent': create_title,
+                    'create_text_sent': create_text,
+                },
+                success: function (response) {
+                    if (response.result == "success") {
+                        console.log(response)
+                        alert("저장 완료!")
+                    }
+                location.reload(true)
+                },
+            })
+        }
+        function openEditForm(e) {
+            card = e.parentElement.parentElement.parentElement;
+            currForm = card.childNodes[1];
+            editForm = card.childNodes[3];
+            currForm.style.display = "none"
+            editForm.style.display = "block"
+        }
+
+        function editMemo(e) {
+            let card = e.parentElement.parentElement.parentElement;
+            let editform = card.children[0].children[1]
+            
+            let curr_title = editform.children[0].children[0].defaultValue
+            let curr_text = editform.children[1].children[0].defaultValue
+            let edit_title = editform.children[0].children[0].value
+            let edit_text = editform.children[1].children[0].value
+            console.log(edit_title, edit_text)
+
+            if (!(edit_title && edit_text)) {
+                return alert('제목과 내용을 둘 다 입력해주세요 :(')
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/memo/edit",
+                data: {
+                    'curr_title_sent': curr_title,
+                    'curr_text_sent': curr_text,
+                    'edit_title_sent': edit_title,
+                    'edit_text_sent': edit_text,
+                },
+                success: function (response) {
+                    if (response.result == "success") {
+                        console.log(response)
+                        alert("수정 완료!")
+                    }
+                location.reload(true)
+                },
+            })
+        }
+
+
+        function deleteMemo(e) {
+            let card = e.parentElement.parentElement.parentElement;
+            let delete_title = card.children[0].children[0].innerText
+            let delete_text = card.children[0].children[1].innerText
+            console.log(delete_title, delete_text)
+
+            $.ajax({
+                type: "POST",
+                url: "/memo/delete",
+                data: {
+                    'delete_title_sent': delete_title,
+                    'delete_text_sent': delete_text,
+                },
+                success: function (response) {
+                    if (response.result == "success") {
+                        console.log(response)
+                        alert("삭제 완료!")
+                    }
+                    location.reload(true)
+                },
+            })
+        }
+
+    </script>
+
+</head>
+
+<body style="">
+    <div class="wrap">
+        <div class="jumbotron">
+            <h1 class="display-5"> 나홀로메모장 <span class="badge bg-secondary">ver2.0</span></h1>
+            <div class="container-sm" id="post-box">
+                <div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="input-title" placeholder="메모 제목을 입력하세요">
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-control" id="input-text" placeholder="내용을 입력하세요" rows="5"></textarea>
+                    </div>
+                    <button onclick="createMemo()" type="submit" class="btn btn-primary">저장하기</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="card-list" class="card-columns"><div class="card" style="margin-bottom: 15px;">
+                <div class="card-body">
+                    <div id="current-form">
+                        <h5 class="card-title" id="card-title">정글 테스트봇입니다</h5>
+                        <p class="card-text" id="card-text">테스트 완료했습니다.d
+수고하셨습니다.</p>
+                        <div id="edit-memo-btns">
+                            <button type="button" class="btn btn-secondary" onclick="openEditForm(this)">수정</button>
+                            <button type="button" class="btn btn-secondary" onclick="deleteMemo(this)">삭제</button>
+                        </div>
+                    </div>
+                    <div id="edit-memo-form" style="padding: 0; display:none;">
+                        <div class="form-group edit-form-group">
+                            <input type="text" class="mod-title" id="edit-input-title" name="title_sent" value="정글 테스트봇입니다">
+                        </div>
+                        <div class="form-group edit-form-group">
+                            <textarea class="mod-text" id="edit-input-text" name="text_sent" rows="2">테스트 완료했습니다.d
+수고하셨습니다.</textarea>
+                        </div> 
+                        <button onclick="editMemo(this)" type="submit" class="btn btn-primary btn-sm">저장</button>
+                    </div>
+                </div>
+            </div></div>
+    </div>
+
+
+</body></html>
